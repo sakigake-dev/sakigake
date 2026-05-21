@@ -47,31 +47,32 @@
 - 日本語の SaaS ユビキタス言語 (テナント / メンバー / プラン / サブスクリプション) をそのまま採用
 
 ## 何が入っているか
-sakigake/
-├── CLAUDE.md                    Claude Code 指針
-├── AGENTS.md                    AI エージェント共通指示
-├── .claude/agents/              4 体のサブエージェント
-├── .dependency-cruiser.cjs      DDD 違反の自動検知ルール
-├── docs/adr/                    設計判断 5 本 (DDD / Clerk / 境界 / 強制 / Inngest)
-├── plans/_template.md           実装プランの雛形
-│
-├── src/contexts/
-│   ├── tenant/                  テナント (組織) + メンバー管理
-│   │   ├── domain/              Entity / Value Object / Repository interface / Domain Events
-│   │   ├── application/         UseCase / DTO / 境界 hook
-│   │   ├── infrastructure/      Supabase 実装
-│   │   └── presentation/        Clerk Webhook ハンドラ
-│   │
-│   ├── billing/                 Stripe Subscription 管理
-│   │   ├── domain/              Subscription / Plan / SubscriptionStatus VO
-│   │   ├── application/         CreateInitial / ChangePlan UseCase
-│   │   └── infrastructure/      Supabase 実装
-│   │
-│   └── example/                 顧客が自分のドメインを追加するためのテンプレ
-│
-├── src/lib/composition/         Composition Root (context adapters)
-├── src/shared/                  共通基盤 (UI / kernel / lib)
-└── tests/                       241 件の単体テスト + 統合テスト
+
+    sakigake/
+    ├── CLAUDE.md                    Claude Code 指針
+    ├── AGENTS.md                    AI エージェント共通指示
+    ├── .claude/agents/              4 体のサブエージェント
+    ├── .dependency-cruiser.cjs      DDD 違反の自動検知ルール
+    ├── docs/adr/                    設計判断 5 本 (DDD / Clerk / 境界 / 強制 / Inngest)
+    ├── plans/_template.md           実装プランの雛形
+    │
+    ├── src/contexts/
+    │   ├── tenant/                  テナント (組織) + メンバー管理
+    │   │   ├── domain/              Entity / Value Object / Repository interface / Domain Events
+    │   │   ├── application/         UseCase / DTO / 境界 hook
+    │   │   ├── infrastructure/      Supabase 実装
+    │   │   └── presentation/        Clerk Webhook ハンドラ
+    │   │
+    │   ├── billing/                 Stripe Subscription 管理
+    │   │   ├── domain/              Subscription / Plan / SubscriptionStatus VO
+    │   │   ├── application/         CreateInitial / ChangePlan UseCase
+    │   │   └── infrastructure/      Supabase 実装
+    │   │
+    │   └── example/                 顧客が自分のドメインを追加するためのテンプレ
+    │
+    ├── src/lib/composition/         Composition Root (context adapters)
+    ├── src/shared/                  共通基盤 (UI / kernel / lib)
+    └── tests/                       241 件の単体テスト + 統合テスト
 
 ## スタック
 
