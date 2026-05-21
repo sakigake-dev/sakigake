@@ -1,16 +1,16 @@
-import type { TenantId } from "../../domain/valueObjects/TenantId";
-
 /**
  * テナント作成時の課金初期化フック (Context Boundary Interface)
  *
  * tenant context が billing context に直接依存しないようにするための境界。
- * billing context 側でこのインターフェースを実装したクラスを提供し、
- * Composition Root で注入する。
  *
- * Adapter パターンに近い構造で、bounded context 間の疎結合を保つ。
+ * 設計判断: **primitive type (string) をパラメータに使う**
+ * - bounded context 間で VO の参照を渡さない (各 context の VO は内部のみ)
+ * - Composition Root の adapter が primitive ↔ 各 context の VO 変換を担う
+ * - これにより billing 側の Plan / Subscription / 戻り値の subscriptionId 等を
+ *   tenant が一切知らずに済む
  *
- * 関連: ADR-0003 (Bounded Context 間の通信 — 予定)
+ * 関連: ADR-0003 (Bounded Context 間の通信、書き起こし予定)
  */
 export interface CreateInitialSubscriptionUseCase {
-  execute(input: { tenantId: TenantId }): Promise<void>;
+  execute(input: { tenantId: string }): Promise<void>;
 }

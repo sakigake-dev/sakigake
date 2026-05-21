@@ -176,7 +176,7 @@ export function createClerkWebhookHandler(deps: ClerkWebhookHandlerDeps) {
           // Tenant 作成後に初期サブスクリプション (free) を同期的に生成する。
           // CreateInitialSubscriptionUseCase は冪等なので Webhook 再送でも安全。
           await deps.createInitialSubscription.execute({
-            tenantId: TenantId.from(result.tenantId),
+            tenantId: result.tenantId,
           });
 
           return Response.json({ ok: true }, { status: 200 });

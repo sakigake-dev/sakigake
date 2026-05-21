@@ -152,7 +152,7 @@ describe("clerkWebhookHandler", () => {
       expect(res.status).toBe(200);
       expect(createInitialSubscriptionExecute).toHaveBeenCalledOnce();
       expect(createInitialSubscriptionExecute).toHaveBeenCalledWith({
-        tenantId: TenantId.from("uuid-tenant-abc"),
+        tenantId: "uuid-tenant-abc",
       });
     });
 
