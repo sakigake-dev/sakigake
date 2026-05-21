@@ -6,7 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "depcruise": "depcruise --config .dependency-cruiser.cjs src",
+    "depcruise:graph": "depcruise --config .dependency-cruiser.cjs --output-type dot src | dot -T svg -o docs/dependency-graph.svg"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.3.4",
@@ -19,6 +26,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "stripe": "^22.1.1",
+    "svix": "^1.94.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
