@@ -40,7 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 node_modules
-.env*
+!.env.example
 .next
 dist
 .DS_Store
