@@ -1,29 +1,219 @@
-# AGENTS.md
+# Sakigake — エージェント運用ガイド
 
-AI コーディングエージェント (Cursor / Claude Code / Aider / Codex CLI 等) 向けの共通指示書。
-
-## このプロジェクトについて
-
-Sakigake は Next.js × DDD × Claude Code ネイティブ の SaaS Boilerplate です。
-詳細は `CLAUDE.md` を参照してください。
+> このファイルは AI agent (Claude Code / Cursor / Aider / Codex CLI 等) が参照する **always-on context**。
+> コード規約・DDD ルール・ユビキタス言語を集約する。
+> プロダクトとしての目的・価格・差別化は `CLAUDE.md` を参照。
 
 ## エージェントが守るべき原則
 
-1. **CLAUDE.md を最初に読む**: 全ての方針判断はここに従う
-2. **plans/ に未読のプランがあれば優先的に読む**: 進行中の計画から外れる実装はしない
-3. **DDD レイヤーを跨ぐ import は禁止**: Domain → Infrastructure の依存方向のみ
-4. **Value Object で原始型を包む**: string → TenantId のように
-5. **テストは先または同時に書く**: TDD 推奨
-6. **ファイル分割の目安**: 300 行を超えそうなら分ける
-7. **secret は絶対にコミットしない**: .env.example のみコミット、実体は .env.local
+実装に着手する前に、以下を必ず確認する:
+
+1. **`CLAUDE.md` を最初に読む** — プロダクトとしての方針判断はここに従う
+2. **`./plans/` に未読のプランがあれば優先的に読む** — 進行中の計画から外れる実装はしない
+3. **DDD レイヤーを跨ぐ import は禁止** — 詳細は下記レイヤリングセクション参照
+4. **Value Object で原始型を包む** — `string` → `TenantId` のように
+5. **テストは先または同時に書く (TDD 推奨)** — 失敗するテスト → 実装 → green の順
+6. **ファイル分割の目安は 300 行** — 超えそうなら分ける
+7. **secret は絶対にコミットしない** — `.env.example` のみコミット、実体は `.env.local`
+
+## DDD 4層レイヤリング
+
+```
+context/
+├── domain/          ← ドメインロジック (純粋、副作用なし、外部依存なし)
+├── application/     ← UseCase (ドメインを協調)
+├── infrastructure/  ← DB / 外部 API の実装
+└── presentation/    ← API ハンドラ・Webhook 受け口(任意)
+```
+
+**依存方向の鉄則**:
+
+```
+Presentation → Application → Domain ← Infrastructure
+```
+
+- Domain は何にも依存しない (外部 lib も import しない)
+- Application は Domain のみに依存
+- Infrastructure は Domain の interface を実装するが、Domain は Infrastructure を知らない
+- 違反は `pnpm depcruise` で機械的に検知 (ADR-0004)
+
+## Bounded Context
+
+```
+src/contexts/
+├── tenant/      ← Sakigake 提供: Clerk Organizations による組織管理
+├── billing/     ← Sakigake 提供: Stripe Subscription
+└── example/     ← 顧客が自分のドメインを書く時の参考実装 (Project entity)
+```
+
+新しい context を追加する手順:
+
+1. `src/contexts/{your_context}/` を作成
+2. 4 層構造に従う (`domain/` `application/` `infrastructure/` `presentation/`)
+3. Domain Repository interface を `domain/repositories/` に置く
+4. `src/lib/composition/{your_context}Container.ts` で DI 配線
+5. `.dependency-cruiser.cjs` を確認 (基本変更不要、context 名が追加されたら命名規則で自動的に拾われる)
+
+## Composition Root
+
+`src/lib/composition/` は **唯一全 context を知ってよい場所**。
+
+- `supabase.ts`: Supabase client factory (Clerk JWT 経由、RLS 有効)
+- `exampleContainer.ts`: example context の UseCase を DI で組み立て
+- `tenantBillingAdapter.ts`: tenant が必要とする hook を billing UseCase で実装
+
+bounded context 間で値を渡す際は **primitive (string)** で受け渡し、Composition Root で VO に変換 (ADR-0003)。
+
+## Value Object 化ルール
+
+**ドメイン内では原始型 (string, number) を露出させない**。必ず Value Object で包む:
+
+```typescript
+// ❌ Bad
+class Order {
+  constructor(public id: string, public customerId: string) {}
+}
+
+// ✅ Good
+class Order {
+  constructor(public id: OrderId, public customerId: CustomerId) {}
+}
+```
+
+理由:
+- 同じ string でも `OrderId` と `CustomerId` は混同してはいけない
+- ドメイン制約 (長さ、形式、enum 値) を type に持たせられる
+- リファクタ時の影響範囲が型で追える
+
+**bounded context 境界では primitive 化、context 内では VO 化** という二段構え (ADR-0003)。
+
+## ユビキタス言語
+
+Sakigake で使う統一語彙(context 共通):
+
+| 日本語 | 英語 (コード) | 説明 |
+|---|---|---|
+| テナント / 組織 | `Tenant` | 顧客の組織エンティティ (Clerk Organization と 1:1 対応) |
+| メンバーシップ | `TenantMembership` | テナントへのユーザー所属 |
+| サブスクリプション | `Subscription` | Stripe の subscription を抽象化 |
+| プラン | `Plan` | free / starter / professional |
+| プロジェクト | `Project` | example context のサンプル aggregate |
+
+**新しいドメイン用語を導入する時は、まずこの表を更新してから実装に入る** こと。これがチーム内・AI agent 間で意味の drift を防ぐ唯一の方法。
+
+### Context 別の用語が増えてきたら
+
+context が増えて語彙が膨らんできたら、context 別の用語ファイルに分割する:
+
+```
+docs/ubiquitous-language/
+├── tenant.md
+├── billing.md
+└── {your_context}.md
+```
+
+その場合、本ファイルには context 横断の共通用語のみを残し、context 固有の用語はファイル分割する。
+
+## サブエージェント運用フロー
+
+`.claude/agents/` 配下の 4 体を順序立てて使う:
+
+```
+新機能 / 曖昧な要件
+  ↓
+planner-researcher → ./plans/YYYYMMDD-feature.md 作成
+  ↓ (人間がレビュー)
+implementer → コード実装 (DDD 規約遵守、TDD)
+  ↓
+tester → テスト実行、失敗時は要約と原因仮説
+  ↓
+code-reviewer → diff レビュー (🔴致命 / 🟡改善 / ✅良い点)
+  ↓
+git commit
+```
+
+各 agent は **メインの Claude セッションとは別の context を持つ**。長い grep や Web 検索は agent に投げてメイン context を節約する。
 
 ## ツール固有の設定参照
 
-- Claude Code: .claude/agents/ 配下の 4 エージェントを使い分け、/plan /review /ship を活用
-- Cursor: .cursorrules (将来追加予定)
-- Aider: CONVENTIONS.md (将来追加予定)
+このプロジェクトは複数の AI agent 系で利用可能:
 
-## ドメイン用語
+- **Claude Code**: `.claude/agents/` 配下の 4 エージェントを使い分け、`/plan` `/review` `/ship` を活用
+- **Cursor**: `.cursorrules` (将来追加予定)
+- **Aider**: `CONVENTIONS.md` (将来追加予定)
+- **Codex CLI**: `AGENTS.md`(本ファイル)を読み込み
 
-bounded context ごとのユビキタス言語は docs/ubiquitous-language/<context>.md を参照してください。
-新しいドメイン用語を導入する時は、まずこのファイルを更新してから実装に入ること。
+どのエージェントも本ファイルと `CLAUDE.md` を always-on で参照する想定。
+
+## コード規約
+
+### 全般
+- TypeScript strict mode
+- 1 ファイル 300 行を超えそうになったら分割
+- `console.log` / `TODO` はリリースビルドに残さない
+- ファイル末尾は LF
+
+### ドメイン層
+- 外部 lib (Next.js / Supabase / Stripe / Clerk) を import しない
+- VO は static factory (`from()`) + `equals()` を持つ
+- Entity は不変条件をコンストラクタで担保
+- Domain Event は副作用を持たない (Application 層で publish)
+
+### アプリケーション層
+- UseCase 1つにつき 1クラス、`execute(input)` のみ public
+- Input/Output は plain object、type alias で定義
+- Repository は interface 経由のみ (Infrastructure を直接知らない)
+- `IEventPublisher` は optional 受け取り (現フェーズは同期実行)
+
+### インフラ層
+- Repository 実装は対応する Domain interface を実装
+- Mapper (DB row ↔ Domain) は別ファイルに切り出す
+- env vars は `process.env` 直接ではなく `requireEnv()` ヘルパー経由
+
+### プレゼンテーション層 (Route Handler / Server Action)
+- **UseCase を呼ぶだけ**。ビジネスロジックを書かない
+- 入力検証は zod 推奨 (依存追加時)
+- Composition Root から Container を取得 → `container.{useCase}.execute()`
+
+### UI コンポーネント
+- shadcn/ui は **base-ui ベース** (Radix Slot 非採用) なので **`asChild` 非対応**
+- Link をボタン風に見せる場合は `buttonVariants({ variant: ... })` を直接 className に渡す
+
+## やってはいけないこと
+
+- `./plans/` を読まずに大きな実装に着手
+- DDD レイヤーを跨いだ依存 (Domain → Infrastructure 等)
+- 貧血ドメインモデル (Entity を getter/setter だけにする)
+- ORM / Supabase の型をそのままドメインに使う (Mapper を挟む)
+- bounded context 間の直接 import (必ず Composition Root の Adapter 経由)
+- `dangerouslyCreateServiceRoleClient` を Webhook 以外で使う (RLS bypass の事故)
+- 顧客が読む README/ドキュメントに英語混じりの中途半端な日本語を残す (日本語ファーストが差別化)
+- **secret / API key / トークンをコミット** (`.env.local` は必ず `.gitignore` で除外、`.env.example` のみコミット)
+
+## 開発フロー
+
+```bash
+# 環境変数
+cp .env.example .env.local
+# .env.local に Clerk / Supabase / Stripe / Inngest のキー記入
+
+# 開発
+pnpm dev              # 開発サーバー
+pnpm test             # vitest watch
+pnpm test:run         # 一括実行
+pnpm typecheck        # 型チェック
+pnpm depcruise        # DDD 違反チェック
+pnpm lint             # ESLint
+
+# 新機能の追加 (Claude Code 経由)
+claude
+# → /plan で要件分解 → /implement → /review → /ship
+```
+
+## 関連ドキュメント
+
+- `CLAUDE.md`: プロダクトとしての目的・差別化・価格
+- `README.md`: プロダクト紹介 (顧客向け)
+- `docs/adr/`: アーキテクチャ設計判断記録 (ADR-0001〜0005)
+- `src/contexts/example/`: 「自分のドメインを書く時の見本」
+- `docs/ubiquitous-language/`: context 別の用語集 (将来追加分)
