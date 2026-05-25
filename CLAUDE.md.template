@@ -1,0 +1,120 @@
+# {{PROJECT_NAME}} — プロダクト指針
+
+> このファイルは Claude Code が毎ターン参照する **always-on context**。
+> 本ファイルは **あなたのプロダクトとしての意思決定** を記録する。
+> コード規約 / DDD ルール / ユビキタス言語は `AGENTS.md` を参照。
+>
+> このファイルは Sakigake の `CLAUDE.md.template` をベースにしています。
+> `{{ }}` のプレースホルダを置換し、自分のプロダクトに合わせて編集してください。
+> 編集後、ファイル名から `.template` を外して `CLAUDE.md` として保存します
+> (Sakigake オリジナルの `CLAUDE.md` は上書きしてください)。
+
+## 目的(最重要)
+
+このプロジェクトの目的(重要度順):
+
+1. **{{GOAL_1}}** — 例: 月 50 万円の MRR を 12 ヶ月以内に達成
+2. **{{GOAL_2}}** — 例: 業界知識を蓄積し、専門性を高める
+3. **{{GOAL_3}}** — 例: 副業から本業転換できる土台にする
+
+提案・実装の方針判断ではこれらを常に意識する。
+
+## プロダクト概要
+
+**{{PRODUCT_DESCRIPTION_ONE_LINER}}**
+(例: "中小企業向けの請求書処理を自動化する B2B SaaS")
+
+差別化(競合と何が違うか):
+
+- {{DIFFERENTIATOR_1}}
+- {{DIFFERENTIATOR_2}}
+- {{DIFFERENTIATOR_3}}
+
+ターゲット顧客: {{TARGET_CUSTOMER}}
+
+## 価格設定
+
+- **{{TIER_1_NAME}}**: {{TIER_1_PRICE}} ({{TIER_1_NOTES}})
+- **{{TIER_2_NAME}}**: {{TIER_2_PRICE}} ({{TIER_2_NOTES}})
+- (必要なら追加 / 削除)
+
+販売チャネル: {{SALES_CHANNELS}} (例: Stripe Checkout, Gumroad, B2B 直販)
+
+## 技術スタック
+
+このプロジェクトは Sakigake (Next.js × DDD × Claude Code ネイティブ SaaS Boilerplate) を起点に構築されています。Sakigake から継承する基盤:
+
+- Frontend: Next.js 16 (App Router) + TypeScript + Tailwind v4 + shadcn/ui (base-ui ベース)
+- Auth: Clerk (Organizations でテナント分離) — ADR-0002
+- DB: Supabase (Postgres + RLS)
+- 課金: Stripe (Subscription + Webhook + Customer Portal)
+- 非同期処理: Inngest — ADR-0005
+- Test: vitest (unit) + Playwright (E2E)
+- DDD 強制: dependency-cruiser — ADR-0004
+
+プロジェクト固有の追加 stack (あれば):
+
+- {{ADDITIONAL_TECH_1}}
+- {{ADDITIONAL_TECH_2}}
+
+## アーキテクチャ(概要)
+
+詳細規約は `AGENTS.md` 参照。Sakigake から継承する要点:
+
+- Bounded Context: `tenant` / `billing` (Sakigake 提供) + `{{your_domain}}` (あなたのドメイン)
+- 4 層レイヤリング: `Domain ← Infrastructure / Application → Domain / Presentation → Application`
+- Composition Root: `src/lib/composition/` のみが全 context を知る (ADR-0003)
+- bounded context 間通信: primitive 境界 + Adapter
+
+新規設計判断は必ず ADR を起票 (`docs/adr/template.md` をコピー)。
+
+## サブエージェント運用
+
+`.claude/agents/` 配下の 4 体 (Sakigake 提供):
+
+| Agent | 用途 |
+|---|---|
+| `planner-researcher` | 新機能 / 曖昧な要件を `./plans/YYYYMMDD-*.md` に分解 |
+| `implementer` | プランに沿って実装 (DDD 規約遵守、TDD) |
+| `tester` | テスト実行 + 失敗ログの要約と原因仮説 |
+| `code-reviewer` | コミット前のレビュー (設計/テスタビリティ/セキュリティ観点) |
+
+各 agent は `AGENTS.md` を always-on で参照する。
+長い調査 (コード横断 grep、Web 検索) は必ず subagent に投げてメイン context を汚さない。
+
+## 顧客への提供物
+
+あなたが顧客に届けるもの:
+
+{{YOUR_DELIVERABLES}}
+
+例:
+1. SaaS ダッシュボードへのアクセス権 (URL + ログイン)
+2. オンボーディング資料 (PDF / 動画)
+3. サポート (メール / Discord / Slack コミュニティ)
+4. SLA / プライバシーポリシー
+
+## 開発フロー
+
+```bash
+# 環境変数
+cp .env.example .env.local
+# .env.local に Clerk / Supabase / Stripe / Inngest のキー記入
+
+# 開発
+pnpm dev
+```
+
+新機能追加は Claude Code 経由:
+
+```
+claude
+# /plan で要件分解 → /implement → /review → /ship
+```
+
+## 関連ドキュメント
+
+- `AGENTS.md`: コード規約・DDD ルール・ユビキタス言語
+- `README.md`: プロダクト紹介 (顧客向け)
+- `docs/adr/`: アーキテクチャ設計判断記録
+- `src/contexts/example/`: 「自分のドメインを書く時の見本」(慣れたら削除して OK)
