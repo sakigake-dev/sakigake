@@ -20,6 +20,8 @@ type Tier = {
   highlighted: boolean;
 };
 
+const TALLY_BASE = "https://tally.so/r/44p9bk?utm_source=lp&utm_medium=pricing";
+
 const tiers: Tier[] = [
   {
     name: "Early Bird",
@@ -33,8 +35,8 @@ const tiers: Tier[] = [
       "メジャーバージョン以内のアップデート権",
       "初期フィードバック反映の優先",
     ],
-    cta: "Early Bird で購入",
-    href: "#",
+    cta: "Early Bird を申込む",
+    href: `${TALLY_BASE}&utm_term=early_bird`,
     highlighted: true,
   },
   {
@@ -48,8 +50,8 @@ const tiers: Tier[] = [
       "Discord/Slack コミュニティ参加権",
       "メジャーバージョン以内のアップデート権",
     ],
-    cta: "Standard で購入",
-    href: "#",
+    cta: "Standard を申込む",
+    href: `${TALLY_BASE}&utm_term=standard`,
     highlighted: false,
   },
   {
@@ -63,8 +65,8 @@ const tiers: Tier[] = [
       "ホワイトラベル(自社製品としての提供可)",
       "無制限プロジェクトでの利用可",
     ],
-    cta: "Agency で購入",
-    href: "#",
+    cta: "Agency を申込む",
+    href: `${TALLY_BASE}&utm_term=agency`,
     highlighted: false,
   },
 ];
@@ -75,7 +77,7 @@ const tiers: Tier[] = [
  * Early Bird を highlighted で目立たせ、Standard を中央、Agency を右に配置。
  * 全て買い切り(サブスクなし)というメッセージを 1 行で添える。
  *
- * Phase A 時点で href は `#`(プレースホルダ)。Phase B で Stripe Checkout に差し替え。
+ * 申込フォームは Tally。Phase B で Stripe Checkout に置き換え予定。
  */
 export function Pricing() {
   return (
@@ -116,6 +118,8 @@ export function Pricing() {
               </ul>
               <Link
                 href={t.href}
+                target="_blank"
+                rel="noreferrer"
                 className={`${buttonVariants({
                   variant: t.highlighted ? "default" : "outline",
                   size: "lg",
@@ -129,7 +133,7 @@ export function Pricing() {
       </div>
 
       <p className="text-center text-xs text-muted-foreground mt-8">
-        ※ Stripe Checkout は Phase B 配線中 — 現在はお問い合わせフォームで申込受付中
+        ※ ボタンをクリックすると申込フォームへ。確認次第、private repo へご招待します。
       </p>
     </section>
   );
