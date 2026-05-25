@@ -29,10 +29,10 @@ const tiers: Tier[] = [
     badge: "先着 50 名",
     badgeVariant: "default",
     features: [
-      "全 source code へのアクセス",
-      "private template repo の fork 権",
-      "Discord/Slack コミュニティ参加権",
-      "メジャーバージョン以内のアップデート権",
+      "1 開発者ライセンス",
+      "private repository への永続アクセス",
+      "自分のプロダクト(無制限)で利用可",
+      "メジャーバージョン以内のアップデート",
       "初期フィードバック反映の優先",
     ],
     cta: "Early Bird を申込む",
@@ -45,10 +45,10 @@ const tiers: Tier[] = [
     badge: "通常価格",
     badgeVariant: "secondary",
     features: [
-      "全 source code へのアクセス",
-      "private template repo の fork 権",
-      "Discord/Slack コミュニティ参加権",
-      "メジャーバージョン以内のアップデート権",
+      "1 開発者ライセンス",
+      "private repository への永続アクセス",
+      "自分のプロダクト(無制限)で利用可",
+      "メジャーバージョン以内のアップデート",
     ],
     cta: "Standard を申込む",
     href: `${TALLY_BASE}&utm_term=standard`,
@@ -62,8 +62,8 @@ const tiers: Tier[] = [
     features: [
       "Standard の全機能",
       "クライアントワークでの利用可",
-      "ホワイトラベル(自社製品としての提供可)",
-      "無制限プロジェクトでの利用可",
+      "ホワイトラベル(自社製品としての提示可)",
+      "最大 3 開発者まで(チーム利用可)",
     ],
     cta: "Agency を申込む",
     href: `${TALLY_BASE}&utm_term=agency`,
@@ -78,6 +78,7 @@ const tiers: Tier[] = [
  * 全て買い切り(サブスクなし)というメッセージを 1 行で添える。
  *
  * 申込フォームは Tally。Phase B で Stripe Checkout に置き換え予定。
+ * ライセンス詳細は LICENSE.md を参照。
  */
 export function Pricing() {
   return (
@@ -134,6 +135,17 @@ export function Pricing() {
 
       <p className="text-center text-xs text-muted-foreground mt-8">
         ※ ボタンをクリックすると申込フォームへ。確認次第、private repo へご招待します。
+        <br />
+        ※ ライセンス詳細は{" "}
+        <Link
+          href="https://github.com/sakigake-dev/sakigake/blob/main/LICENSE.md"
+          target="_blank"
+          rel="noreferrer"
+          className="underline hover:text-foreground"
+        >
+          LICENSE.md
+        </Link>{" "}
+        を参照。再販・再配布・競合 boilerplate としての販売は禁止です。
       </p>
     </section>
   );
